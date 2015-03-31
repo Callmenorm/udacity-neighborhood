@@ -1,8 +1,10 @@
 $(document).ready(function() {
+'use strict';
   ko.applyBindings(new MapViewModel());
 });
 
 function MapViewModel() {
+  'use strict';
   var self = this;
 
   self.unfilteredMarkers = ko.observableArray();
@@ -52,7 +54,7 @@ function MapViewModel() {
         return true;
       } else {
         return element.title.match(new RegExp('.*' + this.filterText() + '.*', 'i')) !== null;
-      };
+      }
     }, self);
   }, self).extend({
     rateLimit: 50,
@@ -76,7 +78,7 @@ function MapViewModel() {
   self.fourSquareSearchErrors = ko.observable();
   self.formattedFourSquareSearchResults = ko.pureComputed(function() {
     return this.fourSquareSearchResults().filter(function(result, idx) {
-      return result.location.address
+      return result.location.address;
     }).map(function(result, idx) {
       return {
         name: result.name,
@@ -102,11 +104,11 @@ function MapViewModel() {
         '&query=' + that.fourSquareSearchString + '&' + fourSquareSearchRadius;
 
       $.getJSON(fourSquareUrl, function(data) {
-        that.fourSquareSearchResults(data.response.venues);
-      })
-      .fail(function(jqxhr, textStatus, error) {
-        that.fourSquareSearchErrors('Foursquare failed with: ' + error !== '' ? error : textStatus);
-      });
+          that.fourSquareSearchResults(data.response.venues);
+        })
+        .fail(function(jqxhr, textStatus, error) {
+          that.fourSquareSearchErrors('Foursquare failed with: ' + error !== '' ? error : textStatus);
+        });
     };
   })(self);
 
