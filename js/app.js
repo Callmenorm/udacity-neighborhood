@@ -20,11 +20,26 @@ function MapViewModel() {
     lng: -111.649289
   });
 
-  self.unfilteredMarkers.push(markerCoordinateMaker({lat: 40.249341, lng: -111.649289}, 'BYU', 'http://home.byu.edu/home/'));
-  self.unfilteredMarkers.push(markerCoordinateMaker({lat: 40.244501, lng: -111.647369}, 'Slab Pizza', 'http://slabpizza.com/'));
-  self.unfilteredMarkers.push(markerCoordinateMaker({lat: 40.244648, lng: -111.64591}, 'Thai Ruby', 'http://thairubyfood.com/'));
-  self.unfilteredMarkers.push(markerCoordinateMaker({lat: 40.245304, lng: -111.646457}, 'J Dawgs', 'http://jdawgs.com/'));
-  self.unfilteredMarkers.push(markerCoordinateMaker({lat: 40.250659, lng: -111.647615}, 'MOA Cafe', 'http://dining.byu.edu/moacafe/'));
+  self.unfilteredMarkers.push(markerCoordinateMaker({
+    lat: 40.249341,
+    lng: -111.649289
+  }, 'BYU', 'http://home.byu.edu/home/'));
+  self.unfilteredMarkers.push(markerCoordinateMaker({
+    lat: 40.244501,
+    lng: -111.647369
+  }, 'Slab Pizza', 'http://slabpizza.com/'));
+  self.unfilteredMarkers.push(markerCoordinateMaker({
+    lat: 40.244648,
+    lng: -111.64591
+  }, 'Thai Ruby', 'http://thairubyfood.com/'));
+  self.unfilteredMarkers.push(markerCoordinateMaker({
+    lat: 40.245304,
+    lng: -111.646457
+  }, 'J Dawgs', 'http://jdawgs.com/'));
+  self.unfilteredMarkers.push(markerCoordinateMaker({
+    lat: 40.250659,
+    lng: -111.647615
+  }, 'MOA Cafe', 'http://dining.byu.edu/moacafe/'));
 
   self.filterText = ko.observable('');
 
@@ -80,7 +95,7 @@ function MapViewModel() {
       var fourSquareClientId = 'client_id=PJEKWKS1MTZP3FAD0W1QLIQ0Z0ZHXPWUWO2GWDHP5FJTJHHV',
         fourSquareClientSecret = 'client_secret=MP3GX2SPOYDLSDWHZB1QG3KUV4G2QBZ1FVBTWIEPJCSKB4ML',
         fourSquareAPIVersion = 'v=20150322',
-        fourSquareSearchRadius = 'radius=2500',
+        fourSquareSearchRadius = 'radius=1500',
         fourSquareUrl = 'https://api.foursquare.com/v2/venues/search?ll=40.249341,-111.649289&' +
         fourSquareClientId + '&' + fourSquareClientSecret + '&' + fourSquareAPIVersion +
         '&query=' + that.fourSquareSearchString + '&' + fourSquareSearchRadius;
@@ -93,13 +108,13 @@ function MapViewModel() {
   })(self);
 
   self.logCoords = function(location) {
-      console.log('lat: ' + location.lat);
-      console.log('lng: ' + location.lng);
+    console.log('lat: ' + location.lat);
+    console.log('lng: ' + location.lng);
   };
 
   self.addFourSquareMarker = function(data) {
-      self.unfilteredMarkers.push(markerCoordinateMaker(data.coords, data.name, data.url));
-      console.log(data);
+    self.unfilteredMarkers.push(markerCoordinateMaker(data.coords, data.name, data.url));
+    console.log(data);
   };
 }
 
@@ -118,16 +133,23 @@ ko.bindingHandlers.map = {
 
     mapObj.googleMap = new google.maps.Map(element, mapOptions);
 
-    console.log(allBindings.get('markers')());
-
     $.each(allBindings.get('markers')(), function(idx, marker, array) {
-      mapObj.markers.push(new google.maps.Marker({
+      var placeMarker = new google.maps.Marker({
         map: mapObj.googleMap,
         position: marker.coords,
         title: marker.title,
         draggable: false
-      }));
+      });
+
+      google.maps.event.addListener(placeMarker, 'click', function() {
+        var placeInfoWindow = new google.maps.InfoWindow({
+          content: placeMarker.title
+        });
+        placeInfoWindow.open(placeMarker.get('map'), placeMarker);
+      });
+      mapObj.markers.push(placeMarker);
     });
+
     $("#" + element.getAttribute("id")).data("mapObj", mapObj);
   },
   update: function(element, valueAccessor, allBindings) {
@@ -139,12 +161,20 @@ ko.bindingHandlers.map = {
 
     mapObj.markers = [];
     $.each(allBindings.get('markers')(), function(idx, marker, array) {
-      mapObj.markers.push(new google.maps.Marker({
+      var placeMarker = new google.maps.Marker({
         map: mapObj.googleMap,
         position: marker.coords,
         title: marker.title,
         draggable: false
-      }));
+      });
+
+      google.maps.event.addListener(placeMarker, 'click', function() {
+        var placeInfoWindow = new google.maps.InfoWindow({
+          content: placeMarker.title
+        });
+        placeInfoWindow.open(placeMarker.get('map'), placeMarker);
+      });
+      mapObj.markers.push(placeMarker);
     });
   }
 };
