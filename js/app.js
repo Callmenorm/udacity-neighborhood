@@ -73,6 +73,7 @@ function MapViewModel() {
   //This is the foursquare search results
   self.fourSquareSearchString = "";
   self.fourSquareSearchResults = ko.observableArray();
+  self.fourSquareSearchErrors = ko.observable();
   self.formattedFourSquareSearchResults = ko.pureComputed(function() {
     return this.fourSquareSearchResults().filter(function(result, idx) {
       return result.location.address
@@ -102,6 +103,9 @@ function MapViewModel() {
 
       $.getJSON(fourSquareUrl, function(data) {
         that.fourSquareSearchResults(data.response.venues);
+      })
+      .fail(function(jqxhr, textStatus, error) {
+        that.fourSquareSearchErrors('Foursquare failed with: ' + error !== '' ? error : textStatus);
       });
     };
   })(self);

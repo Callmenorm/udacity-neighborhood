@@ -27,6 +27,7 @@
     <button class="four-square-button" type="submit" data-bind="enable: true">Search FourSquare</button>
   </form>
 
+  <span class="foursquare-error" data-bind="text: fourSquareSearchErrors"></span>
   <ul data-bind="foreach: formattedFourSquareSearchResults">
       <li>
         <button data-bind="click: function() {$parent.addFourSquareMarker($data)}">Add Marker</button>
