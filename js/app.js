@@ -7,6 +7,12 @@ function MapViewModel() {
 
   self.unfilteredMarkers = ko.observableArray();
 
+  self.baseMapCenter = ko.observable({
+    lat: 40.249341,
+    lng: -111.649289
+  });
+
+  //A small function to package the coordinates for google
   function markerCoordinateMaker(coords, title, url) {
     return {
       coords: new google.maps.LatLng(coords.lat, coords.lng),
@@ -15,11 +21,7 @@ function MapViewModel() {
     };
   }
 
-  self.baseMapCenter = ko.observable({
-    lat: 40.249341,
-    lng: -111.649289
-  });
-
+  //these are the initial locations on the map
   self.unfilteredMarkers.push(markerCoordinateMaker({
     lat: 40.249341,
     lng: -111.649289
@@ -41,27 +43,23 @@ function MapViewModel() {
     lng: -111.647615
   }, 'MOA Cafe', 'http://dining.byu.edu/moacafe/'));
 
+  //This filters the locations with a regex that is supplied by the user
   self.filterText = ko.observable('');
-
   self.filteredMarkers = ko.computed(function() {
     var self = this;
-    var temp = self.unfilteredMarkers().filter(function(element, index) {
+    return self.unfilteredMarkers().filter(function(element, index) {
       if (this.filterText && this.filterText() === '') {
         return true;
       } else {
         return element.title.match(new RegExp('.*' + this.filterText() + '.*', 'i')) !== null;
       };
     }, self);
-
-    console.log(temp);
-    return temp;
   }, self).extend({
     rateLimit: 50,
     notify: 'always'
   });
 
-  console.log(self.filteredMarkers());
-
+  //This centers the map on the initial location
   self.googleMap = ko.computed(function() {
     return {
       center: this.baseMapCenter,
@@ -72,6 +70,7 @@ function MapViewModel() {
     notify: 'always'
   });
 
+  //This is the foursquare search results
   self.fourSquareSearchString = "";
   self.fourSquareSearchResults = ko.observableArray();
   self.formattedFourSquareSearchResults = ko.pureComputed(function() {
@@ -90,6 +89,7 @@ function MapViewModel() {
     });
   }, self);
 
+  //This the hard coded foursquare information that we use to query foursquare's venue service
   self.searchFourSquare = (function(that) {
     return function() {
       var fourSquareClientId = 'client_id=PJEKWKS1MTZP3FAD0W1QLIQ0Z0ZHXPWUWO2GWDHP5FJTJHHV',
@@ -102,24 +102,23 @@ function MapViewModel() {
 
       $.getJSON(fourSquareUrl, function(data) {
         that.fourSquareSearchResults(data.response.venues);
-        console.log(data.response.venues);
       });
     };
   })(self);
 
-  self.logCoords = function(location) {
-    console.log('lat: ' + location.lat);
-    console.log('lng: ' + location.lng);
-  };
-
+  //Adds the marker only if its not already in there
   self.addFourSquareMarker = function(data) {
-    self.unfilteredMarkers.push(markerCoordinateMaker(data.coords, data.name, data.url));
-    console.log(data);
+    if (!self.unfilteredMarkers().some(function(marker, idx) {
+        return marker.title === data.name && marker.url === data.url;
+      })) {
+      self.unfilteredMarkers.push(markerCoordinateMaker(data.coords, data.name, data.url));
+    }
   };
 }
 
 
 ko.bindingHandlers.map = {
+  //This initializes the google map and markers.
   init: function(element, valueAccessor, allBindings) {
     var mapObj = ko.unwrap(valueAccessor()),
       latLng = new google.maps.LatLng(
@@ -133,6 +132,7 @@ ko.bindingHandlers.map = {
 
     mapObj.googleMap = new google.maps.Map(element, mapOptions);
 
+    //For each initial location a marker is made and an event is made display the name of the marker
     $.each(allBindings.get('markers')(), function(idx, marker, array) {
       var placeMarker = new google.maps.Marker({
         map: mapObj.googleMap,
@@ -149,16 +149,16 @@ ko.bindingHandlers.map = {
       });
       mapObj.markers.push(placeMarker);
     });
-
-    $("#" + element.getAttribute("id")).data("mapObj", mapObj);
   },
   update: function(element, valueAccessor, allBindings) {
     var mapObj = ko.unwrap(valueAccessor());
 
+    //This deletes the old markers
     $.each(mapObj.markers, function(idx, marker, array) {
       marker.setMap(null);
     });
 
+    //Places the filtered markers back on the map
     mapObj.markers = [];
     $.each(allBindings.get('markers')(), function(idx, marker, array) {
       var placeMarker = new google.maps.Marker({
@@ -168,6 +168,7 @@ ko.bindingHandlers.map = {
         draggable: false
       });
 
+      //Add click listeners on them
       google.maps.event.addListener(placeMarker, 'click', function() {
         var placeInfoWindow = new google.maps.InfoWindow({
           content: placeMarker.title
